@@ -1,24 +1,24 @@
 {
-   "name": "got/oracle-migrations-bundle",
-   "description": "GOT OracleMigrationsBundle",
-   "type": "symfony-bundle",
-   "license": "MIT",
-   "authors": [{
-       "name": "Maurizio Moreo",
-       "email": "moreoinformatica@gmail.com"
-   },{
-       "name": "Nicholas Ricci",
-       "email": "nicholas.ricci.92@gmail.com"
-   }],
-   "require": {
-       "doctrine/doctrine-migrations-bundle": "^1.1"
-   },
-   "keywords": [
-       "oracle", "doctrine", "migrations"
-   ],
-   "autoload": {
-       "psr-4": {
-           "Got\\OracleMigrationsBundle\\": ""
-       }
-   }
+    "name": "got/oracle-migrations-bundle",
+    "description": "GOT OracleMigrationsBundle",
+    "type": "symfony-bundle",
+    "license": "MIT",
+    "authors": [{
+        "name": "Maurizio Moreo",
+        "email": "moreoinformatica@gmail.com"
+    }, {
+        "name": "Nicholas Ricci",
+        "email": "nicholas.ricci.92@gmail.com"
+    }],
+    "require": {
+        "doctrine/doctrine-migrations-bundle": "^1.1"
+    },
+    "keywords": [
+        "oracle", "doctrine", "migrations"
+    ],
+    "autoload": {
+        "psr-4": {
+            "GOT\\OracleMigrationsBundle\\": ""
+        }
+    }
 }
