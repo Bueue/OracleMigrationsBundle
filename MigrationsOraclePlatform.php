@@ -25,6 +25,26 @@ class MigrationsOraclePlatform extends OraclePlatform
         return $mvName;
     }
 
+    public function getMvListTableColumnsSQL($mvName, $table)
+    {
+        $table = $this->normalizeIdentifier($table);
+
+        return "SELECT * FROM $mvName c WHERE c.table_name = '{$table->getName()}' ORDER BY c.column_name ASC";
+    }
+
+    public function getMvListTableForeignKeysSQL($mvName, $table)
+    {
+        $table = $this->normalizeIdentifier($table);
+
+        return "SELECT * FROM $mvName c WHERE c.table_name = '{$table->getName()}' ORDER BY c.constraint_name ASC,c.position ASC";
+    }
+
+    public function getMvListTableIndexesSQL($mvName, $table)
+    {
+        $table = $this->normalizeIdentifier($table);
+
+        return "SELECT * FROM $mvName c WHERE c.table_name = '{$table->getName()}' ORDER BY c.column_pos ASC";
+    }
     private function normalizeIdentifier($name)
     {
         $identifier = new Identifier($name);
