@@ -8,23 +8,6 @@ use Doctrine\DBAL\Schema\Identifier;
 class MigrationsOraclePlatform extends OraclePlatform
 {
 
-    public function getMvName($prefix, $database)
-    {
-        if (!$database) {
-            throw new \InvalidArgumentException("Invalid database");
-        }
-
-        $database = $this->normalizeIdentifier($database);
-
-        $mvName = $prefix . '_' . $database->getName();
-
-        if (mb_strlen($mvName) > 30) {
-            throw new \LengthException("Materialized view name too long (\"$mvName\"), please choose shorter prefix");
-        }
-
-        return $mvName;
-    }
-
     public function getMvListTableColumnsSQL($mvName, $table)
     {
         $table = $this->normalizeIdentifier($table);
@@ -49,7 +32,8 @@ class MigrationsOraclePlatform extends OraclePlatform
     public function getCreateMvListTableIndexesSQL($mvName)
     {
         return "
-        CREATE materialized VIEW $mvName AS
+        CREATE materialized VIEW $mvName
+        AS
           SELECT uind.index_name                                   AS name,
             uind.index_type                                        AS type,
             DECODE( uind.uniqueness, 'NONUNIQUE', 0, 'UNIQUE', 1 ) AS is_unique,
@@ -61,39 +45,38 @@ class MigrationsOraclePlatform extends OraclePlatform
           INNER JOIN user_ind_columns uind_col ON uind.index_name = uind_col.index_name
           LEFT JOIN user_constraints ucon ON ucon.constraint_name = uind.index_name
           ORDER BY uind_col.column_position ASC";
-
-        # TODO - Add index DDL
     }
 
     public function getCreateMvListTableForeignKeysSQL($mvName)
     {
         return "
         CREATE materialized VIEW $mvName
-        SELECT alc.constraint_name,
-              alc.DELETE_RULE,
-              to_lob(alc.search_condition) search_condition,
-              cols.column_name \"local_column\",
-              cols.position,
-              r_alc.table_name \"references_table\",
-              r_cols.column_name \"foreign_column\",
-              alc.table_name
-         FROM user_cons_columns cols
-        LEFT JOIN user_constraints alc
-           ON alc.constraint_name = cols.constraint_name
-        LEFT JOIN user_constraints r_alc
-           ON alc.r_constraint_name = r_alc.constraint_name
-        LEFT JOIN user_cons_columns r_cols
-           ON r_alc.constraint_name = r_cols.constraint_name
-          AND cols.position = r_cols.position
-        WHERE alc.constraint_name = cols.constraint_name
-          AND alc.constraint_type = 'R'
-        ORDER BY alc.constraint_name ASC, cols.position ASC";
-
-        # TODO - Add index DDL
+        AS
+          SELECT alc.constraint_name,
+                alc.DELETE_RULE,
+                to_lob(alc.search_condition) search_condition,
+                cols.column_name \"local_column\",
+                cols.position,
+                r_alc.table_name \"references_table\",
+                r_cols.column_name \"foreign_column\",
+                alc.table_name
+           FROM user_cons_columns cols
+          LEFT JOIN user_constraints alc
+             ON alc.constraint_name = cols.constraint_name
+          LEFT JOIN user_constraints r_alc
+             ON alc.r_constraint_name = r_alc.constraint_name
+          LEFT JOIN user_cons_columns r_cols
+             ON r_alc.constraint_name = r_cols.constraint_name
+            AND cols.position = r_cols.position
+          WHERE alc.constraint_name = cols.constraint_name
+            AND alc.constraint_type = 'R'
+          ORDER BY alc.constraint_name ASC, cols.position ASC";
     }
 
-    public function getCreateMvListTableColumnsSQL($mvName)
+    public function getCreateMvListTableColumnsSQL($mvName, $database)
     {
+        $database = $this->normalizeIdentifier($database);
+
         return "
         CREATE materialized VIEW $mvName
         AS
@@ -141,13 +124,35 @@ class MigrationsOraclePlatform extends OraclePlatform
           WHERE c.owner = '{$database->getName()}'
           ORDER BY c.column_name";
 
-        # # TODO - Add index DDL and check used fields
     }
 
-    private function normalizeIdentifier($name)
+    public function normalizeIdentifier($name)
     {
         $identifier = new Identifier($name);
 
         return $identifier->isQuoted() ? $identifier : new Identifier(strtoupper($name));
+    }
+
+    public function getRefreshMvSQL($mvName)
+    {
+        return "BEGIN
+                   dbms_mview.refresh('$mvName');
+               END;";
+    }
+
+    public function getCheckRefreshMvSQL($mvName)
+    {
+        return "SELECT COUNT(*)
+                FROM user_objects
+                WHERE last_ddl_time >
+                  (SELECT last_refresh_date
+                  FROM all_mviews
+                  WHERE mview_name = '$mvName'
+                  )";
+    }
+
+    public function getCheckExistsMvSQL($mvName)
+    {
+        return "SELECT COUNT(*) FROM all_mviews WHERE mview_name = '$mvName'";
     }
 }

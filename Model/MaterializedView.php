@@ -31,6 +31,8 @@ class MaterializedView extends AbstractAsset
 
         $this->_name = $this->getMvName($this->_prefix, $this->_database);
         $this->_setName($this->_name);
+
+        $createdOrRefreshed = $this->createOrRefresh();
     }
 
     /**
@@ -57,6 +59,87 @@ class MaterializedView extends AbstractAsset
     }
 
     /**
+     * Executes the sql to create the materialized view.
+     * @param   $_conn
+     * @return  MaterializedView
+     */
+    public function create()
+    {
+        # Get the SQL create from the platform
+        switch ($this->_type) {
+            case self::TYPE_TAB_COLS:
+                $sql = $this->_platform->getCreateMvListTableColumnsSQL($this->_name, $this->_conn->getDatabase());
+                break;
+            case self::TYPE_TAB_FKS:
+                $sql = $this->_platform->getCreateMvListTableForeignKeysSQL($this->_name);
+                break;
+            case self::TYPE_TAB_IDXS:
+                $sql = $this->_platform->getCreateMvListTableIndexesSQL($this->_name);
+                break;
+        }
+
+        # Create Materialized View
+        $this->executeQuery($sql);
+        return $this;
+    }
+
+    /**
+     * Executes the refresh of a materialiazed view.
+     * @param   $_conn
+     * @return  boolean Return true if the materialized view is refreshed.
+     */
+    public function refresh()
+    {
+        $updated = false;
+        if (!$this->isUpdated()) {
+            $this->executeQuery($this->_platform->getRefreshMvSQL($this->_name));
+            $updated = true;
+        }
+
+        return $updated;
+    }
+
+    /**
+     * Check if the materialized view contains the last DDL entries.
+     * @param $_conn
+     * @return boolean
+     */
+    public function isUpdated()
+    {
+        return (bool) !$this->_conn->fetchColumn($this->_platform->getCheckRefreshMvSQL($this->_name));
+    }
+
+    /**
+     * Check if the materialized view exists on database.
+     * @return boolean
+     */
+    public function exists()
+    {
+        return (bool) $this->_conn->fetchColumn($this->_platform->getCheckExistsMvSQL($this->_name));
+    }
+
+    /**
+     * Retrieves all requested records
+     * @return array
+     */
+    public function fetchAll($tableName)
+    {
+        switch ($this->_type) {
+            case self::TYPE_TAB_COLS:
+                $sql = $this->_platform->getMvListTableColumnsSQL($this->_name, $tableName);
+                break;
+            case self::TYPE_TAB_FKS:
+                $sql = $this->_platform->getMvListTableForeignKeysSQL($this->_name, $tableName);
+                break;
+            case self::TYPE_TAB_IDXS:
+                $sql = $this->_platform->getMvListTableIndexesSQL($this->_name, $tableName);
+                break;
+        }
+
+        return $this->_conn->fetchAll($sql);
+    }
+
+    /**
      * Return the type of materialized view.
      * @return int one of constants declared in this class.
      */
@@ -64,4 +147,33 @@ class MaterializedView extends AbstractAsset
     {
         return $this->_type;
     }
+
+    /**
+     * Execute a query
+     * @param  string $sql
+     * @return \Doctrine\DBAL\Driver\Statement
+     */
+    protected function executeQuery($sql)
+    {
+        return $this->_conn->executeQuery($sql);
+    }
+
+    /**
+     * Create if the materialized view does not exist or refresh if is necessary.
+     * @return boolean Return true if materialized view is created or refreshed.
+     */
+    protected function createOrRefresh()
+    {
+        $created   = false;
+        $refreshed = false;
+        if (!$this->exists()) {
+            $this->create();
+            $created = true;
+        } else {
+            $refreshed = $this->refresh();
+        }
+
+        return ($created || $refreshed);
+    }
+
 }
