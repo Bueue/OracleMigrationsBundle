@@ -123,7 +123,11 @@ class MigrationsOraclePlatform extends OraclePlatform
           AND d.COLUMN_NAME = c.COLUMN_NAME
           WHERE c.owner = '{$database->getName()}'
           ORDER BY c.column_name";
+    }
 
+    public function getCreateMvTableNameIndexSQL($mvName, $mvIndexName)
+    {
+        return "CREATE INDEX $mvIndexName ON $mvName (TABLE_NAME)";
     }
 
     public function normalizeIdentifier($name)

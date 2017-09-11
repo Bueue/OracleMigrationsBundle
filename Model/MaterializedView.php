@@ -59,6 +59,23 @@ class MaterializedView extends AbstractAsset
     }
 
     /**
+     * Create a name for MaterializedView index.
+     * @param  string $prefix
+     * @param  string $database
+     * @return string
+     */
+    protected function getMvIndexName()
+    {
+        $mvIndexName = 'IDX_' . $this->_name . '_1';
+
+        if (mb_strlen($mvIndexName) > 30) {
+            throw new \LengthException("Materialized view index name too long (\"$mvIndexName\"), please choose shorter prefix");
+        }
+
+        return $mvIndexName;
+    }
+
+    /**
      * Executes the sql to create the materialized view.
      * @param   $_conn
      * @return  MaterializedView
@@ -80,6 +97,13 @@ class MaterializedView extends AbstractAsset
 
         # Create Materialized View
         $this->executeQuery($sql);
+        # Create Materialized View index
+        $this->executeQuery(
+            $this->_platform->getCreateMvTableNameIndexSQL(
+                $this->_name,
+                $this->getMvIndexName()
+            ));
+
         return $this;
     }
 
