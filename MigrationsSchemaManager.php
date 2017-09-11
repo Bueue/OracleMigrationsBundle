@@ -2,7 +2,9 @@
 
 namespace GOT\OracleMigrationsBundle;
 
+use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Schema\OracleSchemaManager;
+use GOT\OracleMigrationsBundle\Model\MaterializedView;
 
 class MigrationsSchemaManager extends OracleSchemaManager
 {
@@ -10,17 +12,23 @@ class MigrationsSchemaManager extends OracleSchemaManager
     const MV_PREFIX_FKS  = 'MV_TAB_FKS';
     const MV_PREFIX_IDXS = 'MV_TAB_IDXS';
 
+    protected $_mViewTableColumns;
+    protected $_mViewTableForeignKeys;
+    protected $_mViewTableIndexes;
+
+    public function __construct(\Doctrine\DBAL\Connection $conn, AbstractPlatform $platform = null)
+    {
+        parent::__construct($conn, $platform);
+        $this->initializeMViews();
+    }
+
     public function listTableColumns($table, $database = null)
     {
         if (!$database) {
             $database = $this->_conn->getDatabase();
         }
 
-        $mvTableColumnsName = $this->_platform->getMvName(self::MV_PREFIX_COLS, $database);
-
-        $sql = $this->_platform->getMvListTableColumnsSQL($mvTableColumnsName, $table);
-
-        $tableColumns = $this->_conn->fetchAll($sql);
+        $tableColumns = $this->_mViewTableColumns->fetchAll($table);
 
         return $this->_getPortableTableColumnList($table, $database, $tableColumns);
     }
@@ -31,22 +39,42 @@ class MigrationsSchemaManager extends OracleSchemaManager
             $database = $this->_conn->getDatabase();
         }
 
-        $mvTableForeignKeys = $this->_platform->getMvName(self::MV_PREFIX_FKS, $database);
-
-        $sql              = $this->_platform->getMvListTableForeignKeysSQL($mvTableForeignKeys, $table);
-        $tableForeignKeys = $this->_conn->fetchAll($sql);
+        $tableForeignKeys = $this->_mViewTableForeignKeys->fetchAll($table);
 
         return $this->_getPortableTableForeignKeysList($tableForeignKeys);
     }
 
     public function listTableIndexes($table)
     {
-        $mvTableIndexes = $this->_platform->getMvName(self::MV_PREFIX_IDXS, $this->_conn->getDatabase());
-
-        $sql = $this->_platform->getMvListTableIndexesSQL($mvTableIndexes, $table);
-
-        $tableIndexes = $this->_conn->fetchAll($sql);
+        $tableIndexes = $this->_mViewTableIndexes->fetchAll($table);
 
         return $this->_getPortableTableIndexesList($tableIndexes, $table);
+    }
+
+    protected function initializeMViews()
+    {
+        # Init table columns
+        $this->_mViewTableColumns = new MaterializedView(
+            self::MV_PREFIX_COLS,
+            $this->_conn,
+            $this->_platform,
+            MaterializedView::TYPE_TAB_COLS
+        );
+
+        # Init table foreign keys
+        $this->_mViewTableForeignKeys = new MaterializedView(
+            self::MV_PREFIX_FKS,
+            $this->_conn,
+            $this->_platform,
+            MaterializedView::TYPE_TAB_FKS
+        );
+
+        # Init table indexes
+        $this->_mViewTableIndexes = new MaterializedView(
+            self::MV_PREFIX_IDXS,
+            $this->_conn,
+            $this->_platform,
+            MaterializedView::TYPE_TAB_IDXS
+        );
     }
 }
