@@ -1,6 +1,6 @@
 {
-    "name": "got/oracle-migrations-bundle",
-    "description": "GOT OracleMigrationsBundle",
+    "name": "bueue/oracle-migrations-bundle",
+    "description": "Bueue OracleMigrationsBundle",
     "type": "symfony-bundle",
     "license": "MIT",
     "authors": [{
@@ -18,7 +18,7 @@
     ],
     "autoload": {
         "psr-4": {
-            "GOT\\OracleMigrationsBundle\\": ""
+            "Bueue\\OracleMigrationsBundle\\": ""
         }
     }
 }

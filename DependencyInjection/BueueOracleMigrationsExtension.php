@@ -1,10 +1,10 @@
 <?php
 
-namespace GOT\OracleMigrationsBundle\DependencyInjection;
+namespace Bueue\OracleMigrationsBundle\DependencyInjection;
 
-use Symfony\Component\Config\FileLocator;
+#use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\DependencyInjection\Loader;
+#use Symfony\Component\DependencyInjection\Loader;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 
 /**
@@ -12,7 +12,7 @@ use Symfony\Component\HttpKernel\DependencyInjection\Extension;
  *
  * @link http://symfony.com/doc/current/cookbook/bundles/extension.html
  */
-class GOTOracleMigrationsExtension extends Extension
+class BueueOracleMigrationsExtension extends Extension
 {
     /**
      * {@inheritdoc}
@@ -22,7 +22,7 @@ class GOTOracleMigrationsExtension extends Extension
         $configuration = new Configuration();
         $config        = $this->processConfiguration($configuration, $configs);
 
-        $loader = new Loader\YamlFileLoader($container, new FileLocator(__DIR__ . '/../Resources/config'));
-        $loader->load('services.yml');
+        #$loader = new Loader\YamlFileLoader($container, new FileLocator(__DIR__ . '/../Resources/config'));
+        #$loader->load('services.yml');
     }
 }

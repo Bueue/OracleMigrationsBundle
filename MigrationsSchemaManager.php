@@ -1,16 +1,16 @@
 <?php
 
-namespace GOT\OracleMigrationsBundle;
+namespace Bueue\OracleMigrationsBundle;
 
+use Bueue\OracleMigrationsBundle\Model\MaterializedView;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Schema\OracleSchemaManager;
-use GOT\OracleMigrationsBundle\Model\MaterializedView;
 
 class MigrationsSchemaManager extends OracleSchemaManager
 {
-    const MV_PREFIX_COLS = 'MV_TAB_COLS';
-    const MV_PREFIX_FKS  = 'MV_TAB_FKS';
-    const MV_PREFIX_IDXS = 'MV_TAB_IDXS';
+    const MV_PREFIX_COLS = 'MV_MIG_TAB_COLS';
+    const MV_PREFIX_FKS  = 'MV_MIG_TAB_FKS';
+    const MV_PREFIX_IDXS = 'MV_MIG_TAB_IDXS';
 
     protected $_mViewTableColumns;
     protected $_mViewTableForeignKeys;
