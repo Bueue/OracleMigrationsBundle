@@ -1,6 +1,6 @@
 <?php
 
-namespace GOT\OracleMigrationsBundle;
+namespace Bueue\OracleMigrationsBundle;
 
 use Doctrine\DBAL\Driver\OCI8\Driver;
 

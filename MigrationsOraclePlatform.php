@@ -1,6 +1,6 @@
 <?php
 
-namespace GOT\OracleMigrationsBundle;
+namespace Bueue\OracleMigrationsBundle;
 
 use Doctrine\DBAL\Platforms\OraclePlatform;
 use Doctrine\DBAL\Schema\Identifier;

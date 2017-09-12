@@ -1,6 +1,6 @@
 <?php
 
-namespace GOT\OracleMigrationsBundle\Model;
+namespace Bueue\OracleMigrationsBundle\Model;
 
 use Doctrine\DBAL\Schema\AbstractAsset;
 
